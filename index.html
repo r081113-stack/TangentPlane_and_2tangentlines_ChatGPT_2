@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>曲面上の接平面と2本の接線</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+window.MathJax = {tex:{inlineMath:[['\\(','\\)'],['$','$']]}, svg:{fontCache:'global'}};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#202938}
+body{margin:0;background:#f5f7fb}.wrap{max-width:1250px;margin:auto;padding:20px}
+h1{font-size:clamp(1.25rem,3vw,1.8rem);margin:0 0 8px}
+.intro{color:#4b5563;line-height:1.65}
+.panel{background:white;border:1px solid #e1e6ef;border-radius:14px;padding:15px;margin:14px 0;box-shadow:0 3px 12px #1c31500b}
+.controls{display:flex;gap:22px;flex-wrap:wrap;align-items:center}
+.control{min-width:220px;flex:1}.control label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:7px}
+input[type=range]{width:100%;accent-color:#3569c8}
+#plot{height:min(70vh,690px);min-height:460px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem;color:#374151}
+.dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.eq{line-height:1.9;overflow-wrap:anywhere}
+.note{font-size:.9rem;color:#596579;line-height:1.6}
+</style>
+</head>
+<body><main class="wrap">
+<h1>曲面 \(S\) の点 \(P(a,b)\) における接平面</h1>
+<p class="intro">スライダーで接点を動かし、2つの切断平面 \(A:x=a\)、\(B:y=b\)、断面曲線の接線 \(l_b,l_a\)、および両方を含む接平面 \(\pi\) の位置関係を確認できます。</p>
+<section class="panel controls">
+<div class="control"><label for="aval"><span>\(a\)（接点の \(x\) 座標）</span><output id="av">1.50</output></label><input id="aval" type="range" min="-2.5" max="2.5" step=".05" value="1.5"></div>
+<div class="control"><label for="bval"><span>\(b\)（接点の \(y\) 座標）</span><output id="bv">-1.00</output></label><input id="bval" type="range" min="-2.5" max="2.5" step=".05" value="-1"></div>
+</section>
+<section class="panel"><div id="plot"></div>
+<div class="legend">
+<span><i class="dot" style="background:#a6b3c5"></i>曲面 \(S\)</span>
+<span><i class="dot" style="background:#26864a"></i>断面 \(x=a\) と接線 \(l_b\)</span>
+<span><i class="dot" style="background:#2670c9"></i>断面 \(y=b\) と接線 \(l_a\)</span>
+<span><i class="dot" style="background:#e58a22"></i>接平面 \(\pi\)</span>
+<span><i class="dot" style="background:#202938"></i>接点 \(P\)</span>
+</div></section>
+<section class="panel eq">
+<strong>この例の曲面</strong><br>
+\(S:\ z=f(x,y)=4-\dfrac{x^2}{4}-\dfrac{y^2}{2}\)
+<br><strong>接点</strong> \(P=(a,b,f(a,b))\)
+<br><strong>断面曲線</strong><br>
+\(x=a:\quad v=f(a,y)=4-\dfrac{a^2}{4}-\dfrac{y^2}{2}\)（\(y=b\) で接する）<br>
+\(y=b:\quad u=f(x,b)=4-\dfrac{x^2}{4}-\dfrac{b^2}{2}\)（\(x=a\) で接する）
+<br><strong>偏微分係数</strong>
+\(f_x(a,b)=-\dfrac a2,\quad f_y(a,b)=-b\)
+<br><strong>接平面</strong>
+\[
+\pi:\ z=f(a,b)-\frac a2(x-a)-b(y-b)
+\]
+<strong>接線</strong><br>
+\(l_a:\ (x,y,z)=(a+t,\ b,\ f(a,b)-\frac a2t)\)<br>
+\(l_b:\ (x,y,z)=(a,\ b+t,\ f(a,b)-bt)\)
+<p class="note">接平面の式は \(l_a\) と \(l_b\) のどちらに点を代入しても成立します。図では断面平面を半透明にし、曲面・接平面・接線が重なる部分を見分けやすくしています。図はドラッグで回転、ホイールで拡大縮小できます。</p>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const f=(x,y)=>4-x*x/4-y*y/2;
+const range=(lo,hi,n)=>Array.from({length:n},(_,i)=>lo+(hi-lo)*i/(n-1));
+function lineTrace(points,color,name,width=6){return {type:'scatter3d',mode:'lines',x:points.map(p=>p[0]),y:points.map(p=>p[1]),z:points.map(p=>p[2]),name,line:{color,width}}}
+function update(){
+ const a=+$('aval').value,b=+$('bval').value,z0=f(a,b);
+ $('av').textContent=a.toFixed(2);$('bv').textContent=b.toFixed(2);
+ const xs=range(-3,3,55),ys=range(-3,3,55),zz=ys.map(y=>xs.map(x=>f(x,y)));
+ const traces=[
+ {type:'surface',x:xs,y:ys,z:zz,name:'曲面 S',showscale:false,opacity:.72,colorscale:[[0,'#b8c5d5'],[1,'#8da2bc']],hovertemplate:'S<br>x=%{x:.2f}<br>y=%{y:.2f}<br>z=%{z:.2f}<extra></extra>'}
+ ];
+ // Tangent plane patch
+ const px=range(-2.7,2.7,22),py=range(-2.7,2.7,22);
+ traces.push({type:'surface',x:px,y:py,z:py.map(y=>px.map(x=>z0-a/2*(x-a)-b*(y-b))),name:'接平面 π',showscale:false,opacity:.48,colorscale:[[0,'#f4a340'],[1,'#f4a340']],hoverinfo:'skip'});
+ // section curves and tangent lines
+ const t=range(-2.8,2.8,100);
+ traces.push(lineTrace(t.map(y=>[a,y,f(a,y)]),'#21864b','断面 x=a'));
+ traces.push(lineTrace(t.map(y=>[a,y,z0-b*(y-b)]),'#08743a','接線 l_b',8));
+ traces.push(lineTrace(t.map(x=>[x,b,f(x,b)]),'#2670c9','断面 y=b'));
+ traces.push(lineTrace(t.map(x=>[x,b,z0-a/2*(x-a)]),'#174eaa','接線 l_a',8));
+ // vertical slice plane x=a and y=b
+ const q=range(-2.8,2.8,2);
+ traces.push({type:'surface',x:q.map(()=>a),y:q,z:q.map(y=>q.map(()=>f(a,y))),name:'平面 A: x=a',showscale:false,opacity:.13,colorscale:[[0,'#36a45b'],[1,'#36a45b']],hoverinfo:'skip'});
+ traces.push({type:'surface',x:q,y:q.map(()=>b),z:q.map(x=>q.map(()=>f(x,b))),name:'平面 B: y=b',showscale:false,opacity:.13,colorscale:[[0,'#4285e8'],[1,'#4285e8']],hoverinfo:'skip'});
+ traces.push({type:'scatter3d',mode:'markers+text',x:[a],y:[b],z:[z0],name:'接点 P',text:['P(a,b)'],textposition:'top center',marker:{size:6,color:'#202938'},hovertemplate:'P=(%{x:.2f}, %{y:.2f}, %{z:.2f})<extra></extra>'});
+ Plotly.react('plot',traces,{margin:{l:0,r:0,t:8,b:0},paper_bgcolor:'#fff',scene:{xaxis:{title:'x',range:[-3,3]},yaxis:{title:'y',range:[-3,3]},zaxis:{title:'z',range:[-2,5]},aspectmode:'cube',camera:{eye:{x:1.55,y:-1.8,z:1.2}}},legend:{orientation:'h',y:1.02},hoverlabel:{namelength:30}},{responsive:true,displaylogo:false});
+}
+$('aval').addEventListener('input',update);$('bval').addEventListener('input',update);update();
+</script>
+</body></html>
